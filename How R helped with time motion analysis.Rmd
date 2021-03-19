@@ -1,0 +1,308 @@
+---
+title: "How R helped time motion analysis"
+subtitle: "HAT"
+author: "Benjamin Chow"
+output:
+  xaringan::moon_reader:
+    lib_dir: libs
+    css: [default, hygge, ninjutsu]
+    nature:
+      ratio: 16:9
+      highlightStyle: github
+      highlightLines: true
+      countIncrementalSlides: false
+
+---
+```{r, include = F}
+# This is the recommended set up for flipbooks
+knitr::opts_chunk$set(message = FALSE, warning = FALSE, comment = "", cache = F)
+library(flipbookr)
+library(tidyverse)
+library(lubridate)
+library(bupaR)
+```
+# Outline 
+- ### What is time motion study? 
+- ### What kind of analysis can I do in a time motion study? 
+- ### Why I should it in `R`? 
+- ### How I can I do it in `R`? 
+---
+
+class: inverse, middle, center
+# What is time motion study? 
+<img src="what is tms.png" widith= "90%"/>
+---
+
+# Example of workflow/ "motion" element of time motion study
+### Workflow of patients being admitted (artifical data)
+```{r echo=F}
+activity_labels(patients)
+```
+### There can be different permutations and combinations for a work process
+---
+
+```{r eventlog,  include=F}
+patients_df<-tibble(patients)
+
+patients_df %>% select(.order, handling, registration_type, time) %>% 
+  left_join(patients_df %>% select(patient, .order), by=".order") %>% 
+  left_join(patients_df %>% select(employee, .order), by=".order")
+```
+
+`r chunk_reveal("eventlog", display_type = "output", title = "# How to collect data for time motion study")`
+---
+
+### When data is more than _time_ and _motion_, the analysis becomes more of process mining/process analysis
+### For simplicity, we'll call it time motion study  
+--
+```{r echo=F}
+mapping(patients)
+```
+---
+
+# Outline 
+- ### ~~What is time motion study?~~
+- ### What kind of analysis can I do in a time motion study? 
+- ### Why I should it in `R`? 
+- ### How I can I do it in `R`? 
+---
+
+## Why time motion study? 
+- ### Uncover the sequencing of activities in workflow 
+- ### Identify bottlenecks
+- ### Identify outliers when compared against a theoretical workflow model
+- ### Examine the relationship between resource providers
+--
+
+## What did my department use it for?
+1. Proportion of inappropriate referrals
+2. Total duration for case management (Face to face and non face to face activities)  
+---
+
+# Outline 
+- ### ~~What is time motion study?~~
+- ### ~~What kind of analysis can I do in a time motion study?~~
+- ### Why I should it in `R`? 
+- ### How I can I do it in `R`? 
+---
+
+`r chunk_reveal("why_R_1", widths=c(40, 60), title = "### 1. Add comments as you formulate your analysis")`
+
+```{r why_R_1, include=F}
+# Boss ONLY wants 
+# 1 Day of week
+# 2 Month 
+# 3 Year
+
+patients_df %>% tail(2) %>%
+  mutate(
+# 1 Day of week
+    DOW= wday(time, abbr = T),  
+# 2 Month 
+    Month= month(time, abbr = T), 
+# 3 Year
+    Year= year(time), 
+# keep none of the original columns 
+    .keep="none")
+```
+---
+
+`r chunk_reveal("why_R_2", title = "### 2. Analysis doesn't change if you relocate your columns")`
+
+```{r why_R_2, include=F}
+patients_df %>% tail(1) %>%
+  relocate(time, 1) %>% 
+    mutate(DOW= wday(time, abbr = T),
+           Month= month(time, abbr = T), 
+           Year= year(time),
+           .keep="none") 
+```
+---
+
+`r chunk_reveal("why_R_3", break_type = "rotate", chunk_options = "fig.width = 13", display_type = "output", title = "### 3. Stun your boss's with visualizations")`
+
+```{r why_R_3, include=F}
+patients_df<-patients_df %>% mutate(handling= fct_relevel(handling, "Registration", "Triage and Assessment", "Blood test", "X-Ray", "MRI SCAN", "Discuss Results", "Check-out"))
+
+patients_df %>% dplyr::mutate(
+  time= format(time, format = "%H:%M:%S") %>% as.POSIXct(format = "%H:%M:%S"), #standardized the date for ploting
+  hour= lubridate::floor_date(time, "hour")) %>% # round down time to nearest hour
+count(handling, hour)%>% # total instances of each activity at each hour
+add_count(handling, wt=n) %>% # total instances of each activity 
+mutate(percent= ((n/nn)*100)) %>% #relative freq for each activity
+  ggplot(aes(hour, handling, fill=percent)) + geom_tile(size=.5, color="white") +
+  theme_classic() +
+  labs(x="24hour Clock", y="", title= "Peak and Lull Period of Patient Activities", subtitle= "percentage calculated is the relative frequency for a specific activity", fill="%")  + scale_y_discrete(limits = rev(levels(patients_df$handling)))+ # reverse display of y-axis varaibles 
+scale_x_datetime(date_breaks = ("1 hour"), date_labels = "%H") + #display only 24H clock values 
+  scale_fill_viridis_c(option = "magma", alpha=.8) + #ROTATE
+  scale_fill_viridis_c(option = "cividis", alpha=.8) + #ROTATE
+  scale_fill_viridis_c(option = "plasma", alpha=.8) #ROTATE
+```
+---
+
+## 4. `R` has packages specific for time motion analysis
+- ### `R` packages = mobile apps 
+- ### primary package [`bupaR`](http://bupar.net/). 7 secondary packages
+
+--
+
+- ### all languages have rules including `R`
+- ### `bupaR` follows R's `tidyverse` style. 
+- ### `tidyverse` style adopts pipeline production. step1 `%>%` step2. 
+- ### `tidyverse` style is verb heavy. 
+
+--
+
+- ### Lower barrier of entry for beginners. 
+
+---
+
+<img src="dplyr_relocate.png" width= "80%"/>
+##### Artwork by @allison_horst
+---
+
+<img src="dplyr_filter.jpg" width= "90%"/>
+##### Artwork by @allison_horst
+---
+
+`r chunk_reveal("why_R_4_MRI", widths=c(45, 55), title = "## bupaR using tidyverse style \n ###  patients with MRI scan")`
+
+```{r why_R_4_MRI, include=F}
+patients %>% 
+  filter_activity_presence("MRI SCAN") %>% 
+    processing_time(level="log",
+                    units="hours")
+```
+---
+
+`r chunk_reveal("why_R_4_noMRI", widths=c(45, 55), title = "## patients without MRI scan")`
+
+```{r why_R_4_noMRI, include=F}
+patients %>% 
+  filter_activity_presence("MRI SCAN", 
+                           method="none") %>% 
+    processing_time(level="log",
+                    units="hours")
+```
+
+---
+
+# 5. One stop shop
+<img src="rmarkdown_rockstar.png" width= "60%"/>
+##### Artwork by @allison_horst
+---
+<img src="rmarkdown_wizards.png" width= "80%"/>
+##### Artwork by @allison_horst
+---
+
+# 6. As text/ code/ comments of your analysis are in one place, it is reproducible. 
+<img src="reproducibility_court.png" width= "60%"/>
+##### Artwork by @allison_horst
+---
+
+# Outline 
+- ### ~~What is time motion study?~~
+- ### ~~What kind of analysis can I do in a time motion study?~~
+- ### ~~Why I should it in `R`?~~ 
+- ### How I can I do it in `R`? 
+
+---
+
+### Boss   _"Ben, I heard you are into this data thing."_
+
+--
+
+### Me   _"Yeah, why?"_
+
+--
+
+### Boss   _"There are so many patients coming in at different times and doing different activites. Quite hard to visualize."_
+
+--
+
+### Me   _"How about a visual to map the workflow from the time patients were admitted to discharge?"_
+
+--
+
+### Boss   _"I want it ASAP."_
+
+--
+
+###Me   _"Lucky, I know `bupaR`."_
+
+---
+
+# setup
+
+```{r}
+# the packages
+library(tidyverse)
+library(bupaR) # primary
+library(processanimateR) # secondary package which is not automatically loaded with bupaR 
+```
+---
+
+```{r eval=F}
+# import data
+dataset<- read_csv("file name.csv")
+
+# convert to format recognized by bupaR
+dataset_bupaR_format<-
+  dataset %>% 
+    eventlog(
+        case_id = "patient",
+        activity_id = "activity",
+        activity_instance_id = "activity_instance",
+        lifecycle_id = "status",
+        timestamp = "timestamp",
+        resource_id = "resource"
+    )
+```
+---
+
+```{r echo=F}
+patients
+```
+---
+
+# Check out what does the function do
+https://bupaverse.github.io/processmapR/reference/process_map.html
+
+--
+
+### Relative number of instances per activity
+```{r out.width="100%", out.height="30%"}
+patients %>%
+    process_map(type = frequency("relative"))
+```
+---
+
+## Relative number of cases per activity and flow
+```{r out.width="90%", out.height="50%"}
+patients %>%
+    process_map(type = frequency("relative_case"))
+```
+---
+
+`r chunk_reveal("animate_mode", break_type = "replace", float = "top", replacements = c( "absolute", "relative", "off"), replace = "absolute", title="## Animate it \n https://bupaverse.github.io/processanimateR/reference/animate_process.html", widths=99)`
+
+```{r animate_mode, include=F}
+patients %>% 
+  animate_process(mode="absolute")
+```
+---
+
+`r chunk_reveal("animate_duration", break_type = "replace", float = "top", replacements = c(60, 30), replace = "60", title="## What does duration do \n https://bupaverse.github.io/processanimateR/reference/animate_process.html", widths=99)`
+
+```{r animate_duration, include=F}
+patients %>% 
+  animate_process(duration=60)
+```
+---
+
+# Patient journey
+```{r out.width="90%"}
+animate_process(patients, 
+                duration=200, # slow down, easier to spot bottleneck 
+  mapping = token_aes(color = token_scale("patient",scale = "ordinal", range = RColorBrewer::brewer.pal(12, "Paired"))))
+```
