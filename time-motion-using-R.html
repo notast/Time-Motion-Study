@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="" xml:lang="">
+  <head>
+    <title>A minimal flipbook</title>
+    <meta charset="utf-8" />
+    <meta name="author" content="You!" />
+    <link href="libs/remark-css-0.0.1/default.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/hygge.css" rel="stylesheet" />
+    <link href="libs/remark-css-0.0.1/ninjutsu.css" rel="stylesheet" />
+  </head>
+  <body>
+    <textarea id="source">
+class: center, middle, inverse, title-slide
+
+# A minimal flipbook
+## With flipbookr and xaringan
+### You!
+
+---
+
+
+# Outline 
+- ### What is time motion study? 
+- ### What kind of analysis can I do in a time motion study? 
+- ### Why I should it in `R`? 
+- ### How I can I do it in `R`? 
+---
+
+class: inverse, middle, center
+# What is time motion study? 
+&lt;img src="what is tms.png" widith= "90%"/&gt;
+---
+
+# Example of workflow/ "motion" element of time motion study
+### Workflow of patients being admitted (artifical data)
+
+```
+[1] Registration          Triage and Assessment Blood test           
+[4] MRI SCAN              X-Ray                 Discuss Results      
+[7] Check-out            
+7 Levels: Blood test Check-out Discuss Results MRI SCAN ... X-Ray
+```
+### There can be different permutations and combinations for a work process
+---
+
+
+
+count: false
+# How to collect data for time motion study
+
+
+---
+count: false
+# How to collect data for time motion study
+
+```
+# A tibble: 5,442 x 4
+   .order handling     registration_type time               
+    &lt;int&gt; &lt;fct&gt;        &lt;fct&gt;             &lt;dttm&gt;             
+ 1      1 Registration start             2017-01-02 11:41:53
+ 2      2 Registration start             2017-01-02 11:41:53
+ 3      3 Registration start             2017-01-04 01:34:05
+ 4      4 Registration start             2017-01-04 01:34:04
+ 5      5 Registration start             2017-01-04 16:07:47
+ 6      6 Registration start             2017-01-04 16:07:47
+ 7      7 Registration start             2017-01-05 04:56:11
+ 8      8 Registration start             2017-01-05 04:56:11
+ 9      9 Registration start             2017-01-06 05:58:54
+10     10 Registration start             2017-01-06 05:58:54
+# ... with 5,432 more rows
+```
+
+---
+count: false
+# How to collect data for time motion study
+
+```
+# A tibble: 5,442 x 5
+   .order handling     registration_type time                patient
+    &lt;int&gt; &lt;fct&gt;        &lt;fct&gt;             &lt;dttm&gt;              &lt;chr&gt;  
+ 1      1 Registration start             2017-01-02 11:41:53 1      
+ 2      2 Registration start             2017-01-02 11:41:53 2      
+ 3      3 Registration start             2017-01-04 01:34:05 3      
+ 4      4 Registration start             2017-01-04 01:34:04 4      
+ 5      5 Registration start             2017-01-04 16:07:47 5      
+ 6      6 Registration start             2017-01-04 16:07:47 6      
+ 7      7 Registration start             2017-01-05 04:56:11 7      
+ 8      8 Registration start             2017-01-05 04:56:11 8      
+ 9      9 Registration start             2017-01-06 05:58:54 9      
+10     10 Registration start             2017-01-06 05:58:54 10     
+# ... with 5,432 more rows
+```
+
+---
+count: false
+# How to collect data for time motion study
+
+```
+# A tibble: 5,442 x 6
+   .order handling     registration_type time                patient employee
+    &lt;int&gt; &lt;fct&gt;        &lt;fct&gt;             &lt;dttm&gt;              &lt;chr&gt;   &lt;fct&gt;   
+ 1      1 Registration start             2017-01-02 11:41:53 1       r1      
+ 2      2 Registration start             2017-01-02 11:41:53 2       r1      
+ 3      3 Registration start             2017-01-04 01:34:05 3       r1      
+ 4      4 Registration start             2017-01-04 01:34:04 4       r1      
+ 5      5 Registration start             2017-01-04 16:07:47 5       r1      
+ 6      6 Registration start             2017-01-04 16:07:47 6       r1      
+ 7      7 Registration start             2017-01-05 04:56:11 7       r1      
+ 8      8 Registration start             2017-01-05 04:56:11 8       r1      
+ 9      9 Registration start             2017-01-06 05:58:54 9       r1      
+10     10 Registration start             2017-01-06 05:58:54 10      r1      
+# ... with 5,432 more rows
+```
+
+&lt;style&gt;
+.panel1-eventlog-auto {
+  color: black;
+  width: 99%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-eventlog-auto {
+  color: black;
+  width: NA%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-eventlog-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+---
+
+### When data is more than _time_ and _motion_, the analysis becomes more of process mining/process analysis
+### For simplicity, we'll call it time motion study  
+--
+
+```
+Case identifier:		patient 
+Activity identifier:		handling 
+Resource identifier:		employee 
+Activity instance identifier:	handling_id 
+Timestamp:			time 
+Lifecycle transition:		registration_type 
+```
+---
+
+# Outline 
+- ### ~~What is time motion study?~~
+- ### What kind of analysis can I do in a time motion study? 
+- ### Why I should it in `R`? 
+- ### How I can I do it in `R`? 
+---
+
+## Why time motion study? 
+- ### Uncover the sequencing of activities in workflow 
+- ### Identify bottlenecks
+- ### Identify outliers when compared against a theoretical workflow model
+- ### Examine the relationship between resource providers
+--
+
+## What did my department use it for?
+1. Proportion of inappropriate referrals
+2. Total duration for case management (Face to face and non face to face activities)  
+---
+
+# Outline 
+- ### ~~What is time motion study?~~
+- ### ~~What kind of analysis can I do in a time motion study?~~
+- ### Why I should it in `R`? 
+- ### How I can I do it in `R`? 
+---
+
+count: false
+ 
+### 1. Add comments as you formulate your analysis 
+.panel1-why_R_1-auto[
+
+```r
+# Boss ONLY wants
+# 1 Day of week
+# 2 Month
+# 3 Year
+
+*patients_df %&gt;% tail(2)
+```
+]
+ 
+.panel2-why_R_1-auto[
+
+```
+# A tibble: 2 x 7
+  handling  patient employee handling_id registration_type time               
+  &lt;fct&gt;     &lt;chr&gt;   &lt;fct&gt;    &lt;chr&gt;       &lt;fct&gt;             &lt;dttm&gt;             
+1 Check-out 493     r7       2720        complete          2018-05-03 02:11:42
+2 Check-out 494     r7       2721        complete          2018-05-03 02:05:09
+# ... with 1 more variable: .order &lt;int&gt;
+```
+]
+
+---
+count: false
+ 
+### 1. Add comments as you formulate your analysis 
+.panel1-why_R_1-auto[
+
+```r
+# Boss ONLY wants
+# 1 Day of week
+# 2 Month
+# 3 Year
+
+patients_df %&gt;% tail(2) %&gt;%
+* mutate(
+# 1 Day of week
+*   DOW= wday(time, abbr = T),
+# 2 Month
+*   Month= month(time, abbr = T),
+# 3 Year
+*   Year= year(time),
+# keep none of the original columns
+*   .keep="none")
+```
+]
+ 
+.panel2-why_R_1-auto[
+
+```
+# A tibble: 2 x 3
+    DOW Month  Year
+  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+1     5     5  2018
+2     5     5  2018
+```
+]
+
+&lt;style&gt;
+.panel1-why_R_1-auto {
+  color: black;
+  width: 39.2%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-why_R_1-auto {
+  color: black;
+  width: 58.8%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-why_R_1-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+---
+
+count: false
+ 
+### 2.Analysis doesn't change if you relocate your columns
+.panel1-why_R_2-auto[
+
+```r
+*patients_df %&gt;% tail(1)
+```
+]
+ 
+.panel2-why_R_2-auto[
+
+```
+# A tibble: 1 x 7
+  handling  patient employee handling_id registration_type time               
+  &lt;fct&gt;     &lt;chr&gt;   &lt;fct&gt;    &lt;chr&gt;       &lt;fct&gt;             &lt;dttm&gt;             
+1 Check-out 494     r7       2721        complete          2018-05-03 02:05:09
+# ... with 1 more variable: .order &lt;int&gt;
+```
+]
+
+---
+count: false
+ 
+### 2.Analysis doesn't change if you relocate your columns
+.panel1-why_R_2-auto[
+
+```r
+patients_df %&gt;% tail(1) %&gt;%
+* relocate(time, 1)
+```
+]
+ 
+.panel2-why_R_2-auto[
+
+```
+# A tibble: 1 x 7
+  time                handling  patient employee handling_id registration_type
+  &lt;dttm&gt;              &lt;fct&gt;     &lt;chr&gt;   &lt;fct&gt;    &lt;chr&gt;       &lt;fct&gt;            
+1 2018-05-03 02:05:09 Check-out 494     r7       2721        complete         
+# ... with 1 more variable: .order &lt;int&gt;
+```
+]
+
+---
+count: false
+ 
+### 2.Analysis doesn't change if you relocate your columns
+.panel1-why_R_2-auto[
+
+```r
+patients_df %&gt;% tail(1) %&gt;%
+  relocate(time, 1) %&gt;%
+*   mutate(DOW= wday(time, abbr = T),
+*          Month= month(time, abbr = T),
+*          Year= year(time),
+*          .keep="none")
+```
+]
+ 
+.panel2-why_R_2-auto[
+
+```
+# A tibble: 1 x 3
+    DOW Month  Year
+  &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;
+1     5     5  2018
+```
+]
+
+&lt;style&gt;
+.panel1-why_R_2-auto {
+  color: black;
+  width: 38.6060606060606%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel2-why_R_2-auto {
+  color: black;
+  width: 59.3939393939394%;
+  hight: 32%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+.panel3-why_R_2-auto {
+  color: black;
+  width: NA%;
+  hight: 33%;
+  float: left;
+  padding-left: 1%;
+  font-size: 80%
+}
+&lt;/style&gt;
+
+
+
+
+---
+
+3. ### Stun your boss's with visualizations
+![](time-motion-using-R_files/figure-html/unnamed-chunk-4-1.png)&lt;!-- --&gt;
+    </textarea>
+<style data-target="print-only">@media screen {.remark-slide-container{display:block;}.remark-slide-scaler{box-shadow:none;}}</style>
+<script src="https://remarkjs.com/downloads/remark-latest.min.js"></script>
+<script>var slideshow = remark.create({
+"ratio": "16:9",
+"highlightStyle": "github",
+"highlightLines": true,
+"countIncrementalSlides": false
+});
+if (window.HTMLWidgets) slideshow.on('afterShowSlide', function (slide) {
+  window.dispatchEvent(new Event('resize'));
+});
+(function(d) {
+  var s = d.createElement("style"), r = d.querySelector(".remark-slide-scaler");
+  if (!r) return;
+  s.type = "text/css"; s.innerHTML = "@page {size: " + r.style.width + " " + r.style.height +"; }";
+  d.head.appendChild(s);
+})(document);
+
+(function(d) {
+  var el = d.getElementsByClassName("remark-slides-area");
+  if (!el) return;
+  var slide, slides = slideshow.getSlides(), els = el[0].children;
+  for (var i = 1; i < slides.length; i++) {
+    slide = slides[i];
+    if (slide.properties.continued === "true" || slide.properties.count === "false") {
+      els[i - 1].className += ' has-continuation';
+    }
+  }
+  var s = d.createElement("style");
+  s.type = "text/css"; s.innerHTML = "@media print { .has-continuation { display: none; } }";
+  d.head.appendChild(s);
+})(document);
+// delete the temporary CSS (for displaying all slides initially) when the user
+// starts to view slides
+(function() {
+  var deleted = false;
+  slideshow.on('beforeShowSlide', function(slide) {
+    if (deleted) return;
+    var sheets = document.styleSheets, node;
+    for (var i = 0; i < sheets.length; i++) {
+      node = sheets[i].ownerNode;
+      if (node.dataset["target"] !== "print-only") continue;
+      node.parentNode.removeChild(node);
+    }
+    deleted = true;
+  });
+})();
+(function() {
+  "use strict"
+  // Replace <script> tags in slides area to make them executable
+  var scripts = document.querySelectorAll(
+    '.remark-slides-area .remark-slide-container script'
+  );
+  if (!scripts.length) return;
+  for (var i = 0; i < scripts.length; i++) {
+    var s = document.createElement('script');
+    var code = document.createTextNode(scripts[i].textContent);
+    s.appendChild(code);
+    var scriptAttrs = scripts[i].attributes;
+    for (var j = 0; j < scriptAttrs.length; j++) {
+      s.setAttribute(scriptAttrs[j].name, scriptAttrs[j].value);
+    }
+    scripts[i].parentElement.replaceChild(s, scripts[i]);
+  }
+})();
+(function() {
+  var links = document.getElementsByTagName('a');
+  for (var i = 0; i < links.length; i++) {
+    if (/^(https?:)?\/\//.test(links[i].getAttribute('href'))) {
+      links[i].target = '_blank';
+    }
+  }
+})();
+// adds .remark-code-has-line-highlighted class to <pre> parent elements
+// of code chunks containing highlighted lines with class .remark-code-line-highlighted
+(function(d) {
+  const hlines = d.querySelectorAll('.remark-code-line-highlighted');
+  const preParents = [];
+  const findPreParent = function(line, p = 0) {
+    if (p > 1) return null; // traverse up no further than grandparent
+    const el = line.parentElement;
+    return el.tagName === "PRE" ? el : findPreParent(el, ++p);
+  };
+
+  for (let line of hlines) {
+    let pre = findPreParent(line);
+    if (pre && !preParents.includes(pre)) preParents.push(pre);
+  }
+  preParents.forEach(p => p.classList.add("remark-code-has-line-highlighted"));
+})(document);</script>
+
+<script>
+slideshow._releaseMath = function(el) {
+  var i, text, code, codes = el.getElementsByTagName('code');
+  for (i = 0; i < codes.length;) {
+    code = codes[i];
+    if (code.parentNode.tagName !== 'PRE' && code.childElementCount === 0) {
+      text = code.textContent;
+      if (/^\\\((.|\s)+\\\)$/.test(text) || /^\\\[(.|\s)+\\\]$/.test(text) ||
+          /^\$\$(.|\s)+\$\$$/.test(text) ||
+          /^\\begin\{([^}]+)\}(.|\s)+\\end\{[^}]+\}$/.test(text)) {
+        code.outerHTML = code.innerHTML;  // remove <code></code>
+        continue;
+      }
+    }
+    i++;
+  }
+};
+slideshow._releaseMath(document);
+</script>
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+(function () {
+  var script = document.createElement('script');
+  script.type = 'text/javascript';
+  script.src  = 'https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-MML-AM_CHTML';
+  if (location.protocol !== 'file:' && /^https?:/.test(script.src))
+    script.src  = script.src.replace(/^https?:/, '');
+  document.getElementsByTagName('head')[0].appendChild(script);
+})();
+</script>
+  </body>
+</html>
