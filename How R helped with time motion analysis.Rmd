@@ -1,5 +1,5 @@
 ---
-title: "How R helped time motion analysis"
+title: "How R helped me with time motion analysis"
 subtitle: "HAT"
 author: "Benjamin Chow"
 output:
@@ -53,11 +53,17 @@ patients_df %>% select(.order, handling, registration_type, time) %>%
 ---
 
 ### When data is more than _time_ and _motion_, the analysis becomes more of process mining/process analysis
-### For simplicity, we'll call it time motion study  
---
 ```{r echo=F}
 mapping(patients)
 ```
+--
+### For simplicity, we'll call it time motion study  
+---
+
+# Where to collect data for time motion study?
+- ### Observational Study 
+- ### Self reporting 
+- ### Logs from IT system
 ---
 
 # Outline 
@@ -74,9 +80,9 @@ mapping(patients)
 - ### Examine the relationship between resource providers
 --
 
-## What did my department use it for?
-1. Proportion of inappropriate referrals
-2. Total duration for case management (Face to face and non face to face activities)  
+## [What did my department use it for?](https://github.com/notast/Time-Motion-Study/blob/main/Conference%20Presentation_Time-motion%20analysis%20for%20productivity.pdf)
+1. #### Proportion of inappropriate referrals
+2. #### Total duration for case management (Face to face and non face to face activities)  
 ---
 
 # Outline 
@@ -94,7 +100,8 @@ mapping(patients)
 # 2 Month 
 # 3 Year
 
-patients_df %>% tail(2) %>%
+patients_df %>% tail(1) %>% 
+  select(time) %>% 
   mutate(
 # 1 Day of week
     DOW= wday(time, abbr = T),  
@@ -119,7 +126,7 @@ patients_df %>% tail(1) %>%
 ```
 ---
 
-`r chunk_reveal("why_R_3", break_type = "rotate", chunk_options = "fig.width = 13", display_type = "output", title = "### 3. Stun your boss's with visualizations")`
+`r chunk_reveal("why_R_3", break_type = "rotate", chunk_options = "fig.width = 13", display_type = "output", title = "### 3. Stun your boss's with amazing visualizations")`
 
 ```{r why_R_3, include=F}
 patients_df<-patients_df %>% mutate(handling= fct_relevel(handling, "Registration", "Triage and Assessment", "Blood test", "X-Ray", "MRI SCAN", "Discuss Results", "Check-out"))
@@ -149,11 +156,13 @@ scale_x_datetime(date_breaks = ("1 hour"), date_labels = "%H") + #display only 2
 - ### all languages have rules including `R`
 - ### `bupaR` follows R's `tidyverse` style. 
 - ### `tidyverse` style adopts pipeline production. step1 `%>%` step2. 
+--
+
 - ### `tidyverse` style is verb heavy. 
 
 --
 
-- ### Lower barrier of entry for beginners. 
+- ## Lower barrier of entry for beginners. 
 
 ---
 
@@ -208,27 +217,23 @@ patients %>%
 
 ---
 
-### Boss   _"Ben, I heard you are into this data thing."_
+### Boss   _"I heard you attended HAT."_
 
 --
 
-### Me   _"Yeah, why?"_
+### You   _"Yeah, why?"_
 
 --
 
-### Boss   _"There are so many patients coming in at different times and doing different activites. Quite hard to visualize."_
+### Boss   _"There are so many patients coming in at different times and doing different activities. Quite hard to visualize their movements."_ 
 
 --
+### Boss   _"Can you use your HAT skills to create a flow map from the time patients were admitted to discharge?"_
+---
 
-### Me   _"How about a visual to map the workflow from the time patients were admitted to discharge?"_
-
---
-
-### Boss   _"I want it ASAP."_
-
---
-
-###Me   _"Lucky, I know `bupaR`."_
+### Getting you comfortable to use `bupaR` in `R`
+<img src="r_first_then.png" width= "90%"/>
+##### Artwork by @allison_horst
 
 ---
 
@@ -240,7 +245,7 @@ library(tidyverse)
 library(bupaR) # primary
 library(processanimateR) # secondary package which is not automatically loaded with bupaR 
 ```
----
+--
 
 ```{r eval=F}
 # import data
@@ -265,30 +270,17 @@ patients
 ```
 ---
 
-# Check out what does the function do
-https://bupaverse.github.io/processmapR/reference/process_map.html
+# Create a flow map 
 
---
-
-### Relative number of instances per activity
-```{r out.width="100%", out.height="30%"}
-patients %>%
-    process_map(type = frequency("relative"))
-```
----
-
-## Relative number of cases per activity and flow
 ```{r out.width="90%", out.height="50%"}
 patients %>%
-    process_map(type = frequency("relative_case"))
+    process_map()
 ```
 ---
 
-`r chunk_reveal("animate_mode", break_type = "replace", float = "top", replacements = c( "absolute", "relative", "off"), replace = "absolute", title="## Animate it \n https://bupaverse.github.io/processanimateR/reference/animate_process.html", widths=99)`
-
-```{r animate_mode, include=F}
-patients %>% 
-  animate_process(mode="absolute")
+# Animate it 
+```{r}
+patients %>%   animate_process()
 ```
 ---
 
@@ -300,9 +292,25 @@ patients %>%
 ```
 ---
 
-# Patient journey
+- ### Boss   _"I heard you attended HAT."_
+- ### You   _"Yeah, why?"_
+- ### Boss   _"There are so many patients coming in at different times and doing different activities. Quite hard to visualize their movements."_ 
+- ### Boss   _"Can you use your HAT skills to create a flow map from the time patients were admitted to discharge?"_
+
+--
+
+- ### You   _"Here you go boss."_
+---
+
 ```{r out.width="90%"}
-animate_process(patients, 
-                duration=200, # slow down, easier to spot bottleneck 
+animate_process(patients,
+    #slow down, easier to spot bottleneck 
+                duration=200,  
+    # a colour for each pt
   mapping = token_aes(color = token_scale("patient",scale = "ordinal", range = RColorBrewer::brewer.pal(12, "Paired"))))
 ```
+---
+
+# Any Questions 
+<img src="foreveR.jfif" width= "70%"/>
+##### Artwork by @allison_horst
