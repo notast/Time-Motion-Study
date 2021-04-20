@@ -22,10 +22,10 @@ library(lubridate)
 library(bupaR)
 ```
 # Outline 
-- ### What is time motion study? 
-- ### What kind of analysis can I do in a time motion study? 
-- ### Why I should it in `R`? 
-- ### How I can I do it in `R`? 
+- ### 1a) What is time motion study? 
+- ### 1b) What data is needed for time motion study? 
+- ### 2a) Why I should do it in `R`? 
+- ### 2b) How I can I do it in `R`? 
 ---
 
 class: inverse, middle, center
@@ -33,23 +33,43 @@ class: inverse, middle, center
 <img src="what is tms.png" widith= "90%"/>
 ---
 
-# Example of workflow/ "motion" element of time motion study
-### Workflow of patients being admitted (artifical data)
+# Example of "motion" element 
+### Activities involved in hospital admissions (artificial data)
 ```{r echo=F}
 activity_labels(patients)
 ```
-### There can be different permutations and combinations for a work process
+### There can be different permutations and combinations activities for a work process
 ---
+
+## Why time motion study? 
+- ### Uncover the sequencing of activities in workflow 
+- ### Identify bottlenecks
+- ### Identify outliers when compared against a theoretical workflow model
+- ### Examine the relationship between resource providers
+---
+
+## [What did my department use it for?](https://github.com/notast/Time-Motion-Study/blob/main/Conference%20Presentation_Time-motion%20analysis%20for%20productivity.pdf)
+- ### Examine factors affecting productivity
+- ### 1. Proportion of inappropriate referrals
+- ### 2. Total duration for case management (direct and indirect patient activities)  
+---
+
+# Outline 
+- ### ~~1a) What is time motion study?~~
+- ### 1b) What data is needed for time motion study? 
+- ### 2a) Why I should do it in `R`? 
+- ### 2b) How I can I do it in `R`? 
+---
+
+`r chunk_reveal("eventlog", display_type = "output", title = "# What to collect")`
 
 ```{r eventlog,  include=F}
 patients_df<-tibble(patients)
 
-patients_df %>% select(.order, handling, registration_type, time) %>% 
+patients_df %>% select(time,registration_type, .order) %>% 
   left_join(patients_df %>% select(patient, .order), by=".order") %>% 
   left_join(patients_df %>% select(employee, .order), by=".order")
 ```
-
-`r chunk_reveal("eventlog", display_type = "output", title = "# How to collect data for time motion study")`
 ---
 
 ### When data is more than _time_ and _motion_, the analysis becomes more of process mining/process analysis
@@ -67,41 +87,21 @@ mapping(patients)
 ---
 
 # Outline 
-- ### ~~What is time motion study?~~
-- ### What kind of analysis can I do in a time motion study? 
-- ### Why I should it in `R`? 
-- ### How I can I do it in `R`? 
----
-
-## Why time motion study? 
-- ### Uncover the sequencing of activities in workflow 
-- ### Identify bottlenecks
-- ### Identify outliers when compared against a theoretical workflow model
-- ### Examine the relationship between resource providers
---
-
-## [What did my department use it for?](https://github.com/notast/Time-Motion-Study/blob/main/Conference%20Presentation_Time-motion%20analysis%20for%20productivity.pdf)
-1. #### Proportion of inappropriate referrals
-2. #### Total duration for case management (Face to face and non face to face activities)  
----
-
-# Outline 
-- ### ~~What is time motion study?~~
-- ### ~~What kind of analysis can I do in a time motion study?~~
-- ### Why I should it in `R`? 
-- ### How I can I do it in `R`? 
+- ### ~~1a) What is time motion study?~~
+- ### ~~1b) What data is needed for time motion study?~~
+- ### 2a) Why I should do it in `R`? 
+- ### 2b) How I can I do it in `R`? 
 ---
 
 `r chunk_reveal("why_R_1", widths=c(40, 60), title = "### 1. Add comments as you formulate your analysis")`
 
 ```{r why_R_1, include=F}
-# Boss ONLY wants 
+# Boss wants 3 columns from the times tamp 
 # 1 Day of week
 # 2 Month 
 # 3 Year
 
-patients_df %>% tail(1) %>% 
-  select(time) %>% 
+patients_df %>% tail(1) %>% select(time) %>% 
   mutate(
 # 1 Day of week
     DOW= wday(time, abbr = T),  
@@ -147,23 +147,11 @@ scale_x_datetime(date_breaks = ("1 hour"), date_labels = "%H") + #display only 2
 ```
 ---
 
-## 4. `R` has packages specific for time motion analysis
-- ### `R` packages = mobile apps 
-- ### primary package [`bupaR`](http://bupar.net/). 7 secondary packages
-
---
-
-- ### all languages have rules including `R`
-- ### `bupaR` follows R's `tidyverse` style. 
-- ### `tidyverse` style adopts pipeline production. step1 `%>%` step2. 
---
-
-- ### `tidyverse` style is verb heavy. 
-
---
-
-- ## Lower barrier of entry for beginners. 
-
+## 4a. `R`’s `tidyverse` 
+- ### some languages are harder to learn than others due to their rules
+- ### programming/scripting languages have rules too
+- ### `R` has `tidyverse` rules which is beginner friendly
+- ### `tidyverse` rule 1– verb heavy 
 ---
 
 <img src="dplyr_relocate.png" width= "80%"/>
@@ -174,24 +162,42 @@ scale_x_datetime(date_breaks = ("1 hour"), date_labels = "%H") + #display only 2
 ##### Artwork by @allison_horst
 ---
 
-`r chunk_reveal("why_R_4_MRI", widths=c(45, 55), title = "## bupaR using tidyverse style \n ###  patients with MRI scan")`
-
-```{r why_R_4_MRI, include=F}
-patients %>% 
-  filter_activity_presence("MRI SCAN") %>% 
-    processing_time(level="log",
-                    units="hours")
+## `tidyverse` rule 2– pipeline production `%>%`
+```{reval=F}
+Output <-Input  %>% 
+               Step 1 %>% 
+               Step 2 %>% 
+               ... %>% 
+               Last step
 ```
+
 ---
 
-`r chunk_reveal("why_R_4_noMRI", widths=c(45, 55), title = "## patients without MRI scan")`
+## 4b. `R` packages 
+- ### `R` packages = mobile phone apps
+- ### `R` has specific packages for time motion analysis that follow `tidyverse` style
+- ### primary package [`bupaR`](http://bupar.net/). 7 secondary packages
+---
+
+```{r why_R_4_MRI, include=F}
+  patients %>% 
+  filter_activity_presence("MRI SCAN") %>% 
+    throughput_time(level="case",  
+                    units="days") %>% 
+  summary()
+```
+`r chunk_reveal("why_R_4_MRI", widths=c(45, 55), title = "### LOS of patients with MRI scan")`
+---
+
+`r chunk_reveal("why_R_4_noMRI", widths=c(45, 55), title = "### LOS of patients without MRI scan")`
 
 ```{r why_R_4_noMRI, include=F}
 patients %>% 
   filter_activity_presence("MRI SCAN", 
                            method="none") %>% 
-    processing_time(level="log",
-                    units="hours")
+    throughput_time(level="case",
+                    units="days") %>% 
+  summary()
 ```
 
 ---
@@ -210,11 +216,10 @@ patients %>%
 ---
 
 # Outline 
-- ### ~~What is time motion study?~~
-- ### ~~What kind of analysis can I do in a time motion study?~~
-- ### ~~Why I should it in `R`?~~ 
-- ### How I can I do it in `R`? 
-
+- ### ~~1a) What is time motion study?~~ 
+- ### ~~1b) What data is needed for time motion study?~~ 
+- ### 2a) ~~Why I should do it in `R`?~~ 
+- ### 2b) How I can I do it in `R`?
 ---
 
 ### Boss   _"I heard you attended HAT."_
@@ -266,12 +271,12 @@ dataset_bupaR_format<-
 ---
 
 ```{r echo=F}
-patients
+patients_df
 ```
 ---
 
 # Create a flow map 
-
+### Journey of 500 patients across a fixed time period
 ```{r out.width="90%", out.height="50%"}
 patients %>%
     process_map()
@@ -279,12 +284,13 @@ patients %>%
 ---
 
 # Animate it 
+### The journey of the patients at specific time points 
 ```{r}
 patients %>%   animate_process()
 ```
 ---
 
-`r chunk_reveal("animate_duration", break_type = "replace", float = "top", replacements = c(60, 30), replace = "60", title="## What does duration do \n https://bupaverse.github.io/processanimateR/reference/animate_process.html", widths=99)`
+`r chunk_reveal("animate_duration", break_type = "replace", float = "top", replacements = c(60, 30), replace = "60", title="### It’s okay if you don’t know\n https://bupaverse.github.io/processanimateR/reference/animate_process.html", widths=99)`
 
 ```{r animate_duration, include=F}
 patients %>% 
