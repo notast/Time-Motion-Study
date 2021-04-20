@@ -7,4 +7,4 @@ A time motion study was conducted at a public hopsital. The study was presented 
 With an aim to cultivate data literacy at work and feedback from the conference, a more technical [presentation](https://notast.github.io/Time-Motion-Study/How-R-helped-with-time-motion-analysis.html#1) on how `R` was used for time motion analysis was shared.
 
 ## Resource 
-There is a [series of blog posts](https://notast.netlify.app/tags/bupar/) on using `R` for time motion analysis. 
+Here is a [series of blog posts](https://notast.netlify.app/tags/bupar/) on using `R` for time motion analysis. 
